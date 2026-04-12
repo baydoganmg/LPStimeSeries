@@ -1,0 +1,19 @@
+Package: LPStimeSeries
+Version: 1.1-0
+Date: 2026-04-12
+Title: Learned Pattern Similarity and Representation for Time Series
+Authors@R: person(given = c("Mustafa", "Gokce"),
+                  family = "Baydogan",
+                  role = c("aut", "cre"),
+                  email = "baydoganmustafa@gmail.com")
+Depends: R (>= 3.5.0)
+Imports: stats, graphics, grDevices, RColorBrewer
+Description: Learned Pattern Similarity (LPS) for time series.
+			Implements a novel approach to model the dependency structure
+			in time series that generalizes the concept of autoregression to local
+			auto-patterns. Generates a pattern-based representation of time series
+			along with a similarity measure called Learned Pattern Similarity (LPS).
+			Introduces a generalized autoregressive kernel. This package is based on the
+			'randomForest' package by Andy Liaw.
+License: GPL (>= 2)
+NeedsCompilation: yes

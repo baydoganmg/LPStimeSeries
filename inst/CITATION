@@ -1,0 +1,14 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "Time Series Representation and Similarity Based on Local Autopatterns",
+  author   = c(
+    person(given = c("Mustafa", "Gokce"), family = "Baydogan"),
+    person(given = "George", family = "Runger")
+  ),
+  journal  = "Data Mining and Knowledge Discovery",
+  year     = "2016",
+  volume   = "30",
+  number   = "2",
+  pages    = "476--509",
+  header   = "To cite LPStimeSeries in publications use:"
+)
