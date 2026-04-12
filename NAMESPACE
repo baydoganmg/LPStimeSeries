@@ -1,7 +1,7 @@
 useDynLib(LPStimeSeries, .registration = TRUE)
 
 export(learnPattern, tunelearnPattern, computeSimilarity, getTreeInfo,
-	   plotMDS, visualizePattern, LPSNews)
+	   plotMDS, visualizePattern, discriminativePatterns, LPSNews)
 
 S3method(print, learnPattern)
 S3method(predict, learnPattern)
@@ -9,6 +9,6 @@ S3method(plot, learnPattern)
 S3method(learnPattern, default)
 
 importFrom(RColorBrewer, brewer.pal)
-importFrom(stats, runif)
-importFrom(graphics, matplot, par, points, legend, pairs, plot)
-importFrom(grDevices, rainbow)
+importFrom(stats, predict, runif)
+importFrom(graphics, matplot, par, points, legend, pairs, plot, lines, rect)
+importFrom(grDevices, rainbow, adjustcolor)

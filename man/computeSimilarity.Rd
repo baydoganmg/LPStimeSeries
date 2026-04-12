@@ -11,7 +11,8 @@
 \usage{
 computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
    maxdepth=NULL,which.tree=NULL,sim.type=0, terminal=TRUE,
-   testrepresentation,refrepresentation)
+   testrepresentation,refrepresentation,
+   nthreads=1)
 }
 \arguments{
   \item{object}{an object of class \code{learnPattern}.}
@@ -26,6 +27,9 @@ computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
   \item{terminal}{\code{TRUE} if similarity is computed over the learned representations.}
   \item{testrepresentation}{learned representation for test time series.}
   \item{refrepresentation}{learned representation for reference time series.}
+  \item{nthreads}{Number of threads to use for parallel similarity computation.
+    Default is 1 (sequential). Requires OpenMP support. Only applies when computing
+    similarity from raw time series (not from representations).}
 }
 \value{
  A similarity matrix of size ``the number of test series`` by ``the number of reference

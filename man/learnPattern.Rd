@@ -25,8 +25,9 @@
    do.trace=FALSE,
    keep.forest=TRUE,
    oob.pred=FALSE,
-   keep.errors=FALSE, 
-   keep.inbag=FALSE, ...)
+   keep.errors=FALSE,
+   keep.inbag=FALSE,
+   nthreads=1, ...)
 \method{print}{learnPattern}(x, ...)
 }
 \arguments{
@@ -65,6 +66,9 @@
   \item{keep.inbag}{Should an \code{n} by \code{ntree} matrix be
     returned that keeps track of which samples are ``in-bag'' in which
     trees}
+  \item{nthreads}{Number of threads to use for parallel tree building.
+    Default is 1 (sequential). Requires OpenMP support. Note: parallelization
+    is only used when \code{replace=FALSE} (the default).}
   \item{...}{optional parameters to be passed to the low level function
     \code{learnPattern}.}
 }

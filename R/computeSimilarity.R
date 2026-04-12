@@ -1,5 +1,9 @@
 computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdepth=NULL, which.tree=NULL,
-							sim.type=0, terminal=TRUE,testrepresentation,refrepresentation) {
+							sim.type=0, terminal=TRUE,testrepresentation,refrepresentation,
+							nthreads=1) {
+
+  nthreads <- as.integer(nthreads)
+  if (is.na(nthreads) || nthreads < 1) nthreads <- 1L
 
   if(!is.null(object)){
 	  if (!inherits(object, "learnPattern"))
@@ -81,6 +85,7 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdep
 			as.integer(maxdepth),
 			as.integer(sim.type),
 			similarity = integer(ntest*ntrain),
+			as.integer(nthreads),
 			PACKAGE = "LPStimeSeries")[keepIndex]
 	}
 	return(matrix(ans$similarity,ntest,ntrain))

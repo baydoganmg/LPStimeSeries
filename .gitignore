@@ -1,0 +1,14 @@
+# Compiled code
+src/*.o
+src/*.so
+src/*.dll
+
+# R package build artifacts
+*.tar.gz
+*.Rcheck/
+
+# IDE / OS
+.Rproj.user
+.Rhistory
+.RData
+.DS_Store

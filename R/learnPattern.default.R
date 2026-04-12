@@ -12,8 +12,9 @@
 	         do.trace=FALSE,
              keep.forest=TRUE,
              oob.pred=FALSE,
-             keep.errors=FALSE, 
-             keep.inbag=FALSE,   
+             keep.errors=FALSE,
+             keep.inbag=FALSE,
+             nthreads=1,
              ...) {
 
 	
@@ -26,7 +27,10 @@
 		}   
     } 
      
-    if (!is.numeric(x)) stop("data (x) is not numeric") 
+    if (!is.numeric(x)) stop("data (x) is not numeric")
+
+    nthreads <- as.integer(nthreads)
+    if (is.na(nthreads) || nthreads < 1) nthreads <- 1L
         
     sampsize <- sampsize  
     n <- nrow(x)
@@ -119,6 +123,7 @@
                        matrix(integer(n * ntree), n) else integer(1),
                     errors = if (keep.errors)
                        double(ntree) else double(1),
+                    as.integer(nthreads),
                     PACKAGE="LPStimeSeries")[c(16:32)]
         ## Format the forest component, if present.
         if (keep.forest) {
