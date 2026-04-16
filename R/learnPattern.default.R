@@ -15,6 +15,7 @@
              keep.errors=FALSE,
              keep.inbag=FALSE,
              nthreads=1,
+             wrap=TRUE,
              ...) {
 
 	
@@ -60,8 +61,21 @@
 	}
 		
 		
-    ## Check for NAs.
-    if (any(is.na(x))) stop("NA not permitted in predictors")
+    ## Detect variable-length series (trailing NAs)
+    if (any(is.na(x))) {
+      serieslens <- apply(x, 1, function(row) {
+        na_pos <- which(is.na(row))
+        if (length(na_pos) == 0) return(length(row))
+        first_na <- min(na_pos)
+        if (any(!is.na(row[first_na:length(row)])))
+          stop("NAs in predictors must be trailing (variable-length format)")
+        return(first_na - 1L)
+      })
+      if (any(serieslens == 0)) stop("Series with length 0 not permitted")
+      x[is.na(x)] <- 0  # pad with 0; C code never reads past serieslens[i]
+    } else {
+      serieslens <- rep(p, n)
+    }
 
     ## Compiled code expects variables in rows and time series in columns.
     x <- t(x)
@@ -124,6 +138,8 @@
                     errors = if (keep.errors)
                        double(ntree) else double(1),
                     as.integer(nthreads),
+                    as.integer(serieslens),
+                    as.integer(wrap),
                     PACKAGE="LPStimeSeries")[c(16:32)]
         ## Format the forest component, if present.
         if (keep.forest) {
@@ -159,6 +175,8 @@
                     ntree = ntree,
                     maxdepth = maxdepth,
                     mtry = mtry,
+                    serieslens = serieslens,
+                    wrap = wrap,
                     target = rfout$target,
                     target.type = rfout$target.type,
                     forest = if (keep.forest)

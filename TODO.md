@@ -24,7 +24,8 @@ Currently grows full tree by `nodesize` then truncates by `maxdepth`, which is c
 Added `nthreads` parameter to `learnPattern` and `computeSimilarity`. Tree building and similarity computation are parallelized with per-thread RNG (xoshiro256**). Benchmarks show near-linear scaling (e.g., ~3.4x at 4 threads, ~5.9x at 8 threads on 500×150 dataset with 500 trees). Falls back gracefully to single-threaded when OpenMP is unavailable.
 
 ### 4. Fair segment sampling
-Observations near the start and end of time series are underrepresented because segment start positions are sampled uniformly from `[0, length - segment_length)`. A fair sampling strategy is needed.
+**Status:** Resolved by variable-length support (#6).
+With `wrap=TRUE` (default), segments use modulo wrapping (`pos % serieslens[i]`), so every position in every series is visited equally — there are no underrepresented edges. The target start is sampled from the full `[0, mdim)` range and wraps around, giving uniform coverage. For `wrap=FALSE`, edge underrepresentation still exists but this is the less common mode.
 
 ### 5. Better pattern visualization
 **Status:** Completed.
@@ -33,7 +34,8 @@ Observations near the start and end of time series are underrepresented because 
 - Both functions handle non-contiguous time segments correctly (no lines drawn across gaps).
 
 ### 6. Variable-length time series support
-Currently requires UCR format (equal-length rows). LPS can handle variable-length series but the input format needs to change.
+**Status:** Completed.
+Input accepts NA-padded matrices (trailing NAs = shorter series). Per-series length vector (`serieslens`) with modulo wrapping through all C functions. Added `wrap` parameter (`TRUE`=modulo wrap, `FALSE`=exclude short series). Added `normalize` parameter to `predict` and `computeSimilarity` to divide node counts by series length for fair comparison across different-length series. Tested on 11 UCR variable-length datasets.
 
 ### 7. Multivariate time series support
 LPS can work for multivariate time series similarity. Current version needs modifications.

@@ -12,7 +12,7 @@
 computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
    maxdepth=NULL,which.tree=NULL,sim.type=0, terminal=TRUE,
    testrepresentation,refrepresentation,
-   nthreads=1)
+   nthreads=1, normalize=FALSE)
 }
 \arguments{
   \item{object}{an object of class \code{learnPattern}.}
@@ -30,6 +30,10 @@ computeSimilarity(object=NULL,testseries=NULL,refseries=NULL,
   \item{nthreads}{Number of threads to use for parallel similarity computation.
     Default is 1 (sequential). Requires OpenMP support. Only applies when computing
     similarity from raw time series (not from representations).}
+  \item{normalize}{If \code{TRUE}, normalize node counts by series length
+    before computing distances.  Recommended when comparing variable-length
+    time series so that longer series do not dominate the similarity measure.
+    Has no effect on the ranking for equal-length data.  Default is \code{FALSE}.}
 }
 \value{
  A similarity matrix of size ``the number of test series`` by ``the number of reference

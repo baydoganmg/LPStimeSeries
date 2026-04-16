@@ -23,16 +23,19 @@
 double quick_select(double arr[], int n);
 
 void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth,
-			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode,
+			int mdim, int nsample, int *serieslens, int wrap,
+			int *lDaughter, int *rDaughter, double *upper, double *avnode,
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize,
 			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat, int isRand,
 			rng_state_t *rng);
 
 void predictRepresentation_time_series(double *x, int segmentlen, int nsample, int mdim,
+		int *serieslens,
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, int *nodex, int maxdepth);
 
 void predict_time_series(double *x, int segmentlen, int nsample, int mdim,
+		int *serieslens,
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, double *nodepred,
 		int maxdepth, int target, double *prediction, int *targetcount, int cumulative);

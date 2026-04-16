@@ -164,7 +164,8 @@ void findSplit(double *x, int *jdex, double *y, int mdim, int nsample,
 
 
 void regTree_time_series(double *x, double *segfactor, int targetdiff, int segmentdiff, int maxdepth,
-			int mdim, int nsample, int *lDaughter, int *rDaughter, double *upper, double *avnode,
+			int mdim, int nsample, int *serieslens, int wrap,
+			int *lDaughter, int *rDaughter, double *upper, double *avnode,
 			int *nodedepth, int *nodestatus, int *splitType, int nrnodes, int *treeSize, int nthsize,
 			int mtry, int *mbest, int *currentTarget, int *currentTargetType, int *cat, int isRand,
 			rng_state_t *rng) {
@@ -172,6 +173,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
     int i, j, k, m, ncur, *jdex, *nodestart, *nodepop, nofsampleobs, segmentlen, cur_target, cur_x;
     int ndstart, ndend, ndendl, nodecnt, jstat, msplit, cnt, totalnodes, rotate;
     double d, ss, av, decsplit, ubest, sumnode, *y, *obsx, rndm;
+    int pos, pos2, slen;
 	segmentlen = (int) (*segfactor * mdim);
 	nofsampleobs = segmentlen * nsample;
 
@@ -188,7 +190,7 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
    rndm=rng_uniform(rng);
    if(targetdiff==1 && rndm<0.5) {
 	    if(rotate<1){
-			cur_target=(int) (rng_uniform(rng)*(mdim-segmentlen)); //unequal observation probabilities
+			cur_target=(int) (rng_uniform(rng)*(mdim-segmentlen));
 		} else {
 			cur_target=(int) (rng_uniform(rng)*(mdim-1));
 		}
@@ -197,25 +199,22 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 	    if(rotate<1){
 			cur_target=(int) (rng_uniform(rng)*(mdim-segmentlen+1));
 		} else {
-			cur_target=(int) (rng_uniform(rng)*mdim); //unequal observation probabilities
+			cur_target=(int) (rng_uniform(rng)*mdim);
 		}
 		*currentTargetType=OBS_SERIES;
    }
 
    cnt=0;
    for (i = 0; i < nsample; i++) {
+		slen = serieslens[i];
 		for (j = 0; j < segmentlen; j++) {
 			 if(*currentTargetType==OBS_SERIES){
-				if(cur_target+j>mdim-1)
-					y[cnt++]=x[cur_target+j-mdim+i*mdim];
-				else
-					y[cnt++]=x[cur_target+j+i*mdim];
-
+				pos = (cur_target + j) % slen;
+				y[cnt++]=x[pos+i*mdim];
 			} else if(*currentTargetType==DIFF_SERIES){
-				if(cur_target+j>mdim-2)
-					y[cnt++]=x[cur_target+(j+2)-mdim+i*mdim]-x[cur_target+j+1-mdim+i*mdim];
-				else
-					y[cnt++]=x[cur_target+(j+1)+i*mdim]-x[cur_target+j+i*mdim];
+				pos = (cur_target + j) % slen;
+				pos2 = (cur_target + j + 1) % slen;
+				y[cnt++]=x[pos2+i*mdim]-x[pos+i*mdim];
 			}
 		}
 	}
@@ -285,17 +284,15 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 
 		cnt=0;
 		for (i = 0; i < nsample; i++) {
+			slen = serieslens[i];
 			for (j = 0; j < segmentlen ; j++) {
 				if(splitType[k]==OBS_SERIES){
-					if(cur_x+j>mdim-1)
-						obsx[cnt++]=x[cur_x+j-mdim+i*mdim];
-					else
-						obsx[cnt++]=x[cur_x+j+i*mdim];
+					pos = (cur_x + j) % slen;
+					obsx[cnt++]=x[pos+i*mdim];
 				} else if(splitType[k]==DIFF_SERIES){
-					if(cur_x+j>mdim-2)
-						obsx[cnt++]=x[cur_x+(j+2)-mdim+i*mdim]-x[cur_x+j+1-mdim+i*mdim];
-					else
-						obsx[cnt++]=x[cur_x+(j+1)+i*mdim]-x[cur_x+j+i*mdim];
+					pos = (cur_x + j) % slen;
+					pos2 = (cur_x + j + 1) % slen;
+					obsx[cnt++]=x[pos2+i*mdim]-x[pos+i*mdim];
 				}
 			}
 		}
@@ -380,32 +377,27 @@ void regTree_time_series(double *x, double *segfactor, int targetdiff, int segme
 
 
 void predictRepresentation_time_series(double *x, int segmentlen, int nsample, int mdim,
+		int *serieslens,
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, int *nodex, int maxdepth) {
 
-    int i, j, k, m;
+    int i, j, k, m, pos, pos2, slen;
 
     for (i = 0; i < nsample; i++) {
+		slen = serieslens[i];
 		for (j = 0; j < segmentlen ; j++) {
 			k = 0;
 			while (nodestatus[k] != NODE_TERMINAL && nodedepth[k] < maxdepth) { /* go down the tree */
 				m = splitVar[k] - 1;
 				if(splitType[k]==OBS_SERIES){
-					if(m+j>mdim-1){
-						k = (x[m+j-mdim+i*mdim] <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					} else {
-						k = (x[m+j+i*mdim] <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					}
+					pos = (m + j) % slen;
+					k = (x[pos+i*mdim] <= split[k]) ?
+					lDaughter[k] - 1 : rDaughter[k] - 1;
 				}  else if(splitType[k]==DIFF_SERIES){
-					if(m+j>mdim-2){
-						k = ((x[m+(j+2)-mdim+i*mdim]-x[m+j-mdim+1+i*mdim]) <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					} else {
-						k = ((x[m+(j+1)+i*mdim]-x[m+j+i*mdim]) <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					}
+					pos = (m + j) % slen;
+					pos2 = (m + j + 1) % slen;
+					k = ((x[pos2+i*mdim]-x[pos+i*mdim]) <= split[k]) ?
+					lDaughter[k] - 1 : rDaughter[k] - 1;
 				}
 			}
 			nodex[k*nsample+i]++;
@@ -414,53 +406,38 @@ void predictRepresentation_time_series(double *x, int segmentlen, int nsample, i
 }
 
 void predict_time_series(double *x, int segmentlen, int nsample, int mdim,
+		int *serieslens,
 		int *lDaughter, int *rDaughter, int *nodedepth, int *nodestatus,
 		double *split, int *splitVar, int *splitType, double *nodepred,
 		int maxdepth, int target, double *prediction, int *targetcount, int cumulative) {
 
-    int i, j, k, m, t;
+    int i, j, k, m, t, pos, pos2, slen, tpos;
 
 	t = target - 1;
 	for (j = 0; j < segmentlen ; j++) {
-		if(t+j>mdim-1){
-			targetcount[t+j-mdim]++;
-		} else {
-			targetcount[t+j]++;
-		}
 		for (i = 0; i < nsample; i++) {
+			slen = serieslens[i];
+			tpos = (t + j) % slen;
+			targetcount[tpos + i * mdim]++;
+
 			k = 0;
 			while (nodestatus[k] != NODE_TERMINAL && nodedepth[k] < maxdepth) { /* go down the tree */
 				m = splitVar[k] - 1;
 				if(splitType[k]==OBS_SERIES){
-					if(m+j>mdim-1){
-						k = (x[m+j-mdim+i*mdim] <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					} else {
-						k = (x[m+j+i*mdim] <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					}
+					pos = (m + j) % slen;
+					k = (x[pos+i*mdim] <= split[k]) ?
+					lDaughter[k] - 1 : rDaughter[k] - 1;
 				}  else if(splitType[k]==DIFF_SERIES){
-					if(m+j>mdim-2){
-						k = ((x[m+(j+2)-mdim+i*mdim]-x[m+j-mdim+1+i*mdim]) <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					} else {
-						k = ((x[m+(j+1)+i*mdim]-x[m+j+i*mdim]) <= split[k]) ?
-						lDaughter[k] - 1 : rDaughter[k] - 1;
-					}
+					pos = (m + j) % slen;
+					pos2 = (m + j + 1) % slen;
+					k = ((x[pos2+i*mdim]-x[pos+i*mdim]) <= split[k]) ?
+					lDaughter[k] - 1 : rDaughter[k] - 1;
 				}
 			}
 			if(cumulative){
-				if(t+j>mdim-1){
-					prediction[t+j-mdim+i*mdim] += nodepred[k];
-				} else {
-					prediction[t+j+i*mdim] += nodepred[k];
-				}
+				prediction[tpos+i*mdim] += nodepred[k];
 			} else {
-				if(t+j>mdim-1){
-					prediction[t+j-mdim+i*mdim] = nodepred[k];
-				} else {
-					prediction[t+j+i*mdim] = nodepred[k];
-				}
+				prediction[tpos+i*mdim] = nodepred[k];
 			}
 		}
 	}

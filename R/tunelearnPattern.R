@@ -1,5 +1,6 @@
-tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.25,0.5,0.75), random.split=0, 
-						mindepth=4, maxdepth=8, depthstep=2, ntreeTry=25, target.diff=TRUE, segment.diff=TRUE, ...) {
+tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.25,0.5,0.75), random.split=0,
+						mindepth=4, maxdepth=8, depthstep=2, ntreeTry=25, target.diff=TRUE, segment.diff=TRUE,
+						nthreads=1, ...) {
 
 	ndepthlev <- 1+(maxdepth-mindepth)/depthstep
 	
@@ -25,15 +26,15 @@ tunelearnPattern <- function(x, y, unlabeledx=NULL, nfolds=5, segmentlevels=c(0.
 		for(l in 1:length(segmentlevels)){
 			if(!is.null(unlabeledx)){
 				ensemble <- learnPattern(rbind(x[trainind,],unlabeledx),segment.factor=segmentlevels[l],random.seg=random.split,
-					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth)	
+					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth,nthreads=nthreads)
 			} else {
 				ensemble <- learnPattern(x[trainind,],segment.factor=segmentlevels[l],random.split=random.split,
-					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth)		
+					target.diff=target.diff,segment.diff=segment.diff,ntree=ntreeTry,maxdepth=maxdepth,nthreads=nthreads)
 			}
 			
 			tempdepth <- mindepth
 			while(tempdepth<=maxdepth){	
-				sim <- computeSimilarity(ensemble,x[testind,],x[trainind,],maxdepth=tempdepth)		
+				sim <- computeSimilarity(ensemble,x[testind,],x[trainind,],maxdepth=tempdepth,nthreads=nthreads)
 				id <- apply(sim,1,which.min)					
 				predicted <- classtr[id]
 				error_rates[cnt,fold] <- 1-sum(classtst==predicted)/ntest	

@@ -10,10 +10,11 @@
   error rate is returned.
 }
 \usage{
-tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5, 
+tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
    segmentlevels=c(0.25,0.5,0.75), random.split=0,
-   mindepth=4, maxdepth=8, depthstep=2, 
-   ntreeTry=25, target.diff=TRUE, segment.diff=TRUE, ...) 
+   mindepth=4, maxdepth=8, depthstep=2,
+   ntreeTry=25, target.diff=TRUE, segment.diff=TRUE,
+   nthreads=1, ...)
 }
 \arguments{
   \item{x}{time series database as a matrix in UCR format. Rows are univariate time series, columns 
@@ -33,7 +34,9 @@ tunelearnPattern(x, y, unlabeledx=NULL, nfolds=5,
   and \code{maxdepth} to be evaluated.}
   \item{ntreeTry}{number of trees to be train for each fold.}
   \item{target.diff}{Can target segment be a difference feature?}
-  \item{segment.diff}{Can predictor segments be difference feature?}  
+  \item{segment.diff}{Can predictor segments be difference feature?}
+  \item{nthreads}{Number of threads to use for parallel tree building and
+    similarity computation.  Default is 1 (sequential).}
   \item{...}{optional parameters to be passed to the low level function
     \code{tunelearnPattern}.}
 }

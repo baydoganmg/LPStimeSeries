@@ -1,6 +1,6 @@
 "predict.learnPattern" <-
     function (object, newdata, which.tree=NULL,
-				nodes=TRUE, maxdepth=NULL, ...)
+				nodes=TRUE, maxdepth=NULL, normalize=FALSE, ...)
 {
     if (!inherits(object, "learnPattern"))
         stop("object not of class learnPattern")
@@ -9,20 +9,33 @@
 	
     x <- newdata
 
-    if (any(is.na(x)))
-        stop("missing values in newdata")
-        
-    if (!is.numeric(x)) stop("newdata is not numeric") 
-    
+    if (!is.numeric(x)) stop("newdata is not numeric")
+
     if(!is.matrix(x)){
 		if(length(x)>0){ #single time series
 			x <- t(as.matrix(x))
 		}
 		else{
 			stop("data (x) has 0 rows")
-		}   
-    } 
-                   	
+		}
+    }
+
+    ## Detect variable-length series (trailing NAs)
+    if (any(is.na(x))) {
+      serieslens <- apply(x, 1, function(row) {
+        na_pos <- which(is.na(row))
+        if (length(na_pos) == 0) return(length(row))
+        first_na <- min(na_pos)
+        if (any(!is.na(row[first_na:length(row)])))
+          stop("NAs in newdata must be trailing (variable-length format)")
+        return(first_na - 1L)
+      })
+      if (any(serieslens == 0)) stop("Series with length 0 not permitted")
+      x[is.na(x)] <- 0
+    } else {
+      serieslens <- rep(ncol(x), nrow(x))
+    }
+
     if(is.null(maxdepth)) maxdepth <- object$maxdepth
     
     if(maxdepth>object$maxdepth) {
@@ -53,12 +66,12 @@
 	if (nodes){
 		keepIndex <- c("nodeRep","lenRep")
 		if(!is.null(which.tree)){
-			nodexts <- integer(ntest * length(which.tree) * object$forest$nrnodes)
+			nodexts <- double(ntest * length(which.tree) * object$forest$nrnodes)
 		} else {
-			nodexts <- integer(ntest * object$forest$nrnodes * object$ntree )
+			nodexts <- double(ntest * object$forest$nrnodes * object$ntree )
 		}
-			
-		ans <- .C("regForest_represent",  
+
+		ans <- .C("regForest_represent",
 				as.double(x),
 				as.integer(ntest),
 				as.integer(which.tree),
@@ -78,6 +91,8 @@
 				as.integer(maxdepth),
 				nodeRep = nodexts,
 				lenRep = integer(1),
+				as.integer(serieslens),
+				as.integer(normalize),
 				PACKAGE = "LPStimeSeries")[keepIndex]
 				
 		res=t(matrix(ans$nodeRep[1:(ans$lenRep*ntest)], nrow=ans$lenRep))
@@ -85,7 +100,7 @@
 	} else {	
 
 		keepIndex <- c("predicted","count")
-		ans <- .C("regForest_predict",  
+		ans <- .C("regForest_predict",
 				as.double(x),
 				as.integer(ntest),
 				as.integer(which.tree),
@@ -106,11 +121,13 @@
 				as.integer(object$target),
 				as.integer(maxdepth),
 				predicted = double(ntest * mdim),
-				count = integer(mdim),
+				count = integer(ntest * mdim),
+				as.integer(serieslens),
 				PACKAGE = "LPStimeSeries")[keepIndex]
-				
+
 		ans$predicted[ans$predicted==-999]=NA
-		res=list(predictions=t(matrix(ans$predicted, nrow=mdim)),target.count=ans$count)	
+		res=list(predictions=t(matrix(ans$predicted, nrow=mdim)),
+		         target.count=t(matrix(ans$count, nrow=mdim)))
 	}
     res
 } 

@@ -14,6 +14,21 @@ discriminativePatterns <- function(object, x, classes, n=5, plot=TRUE,
     }
   }
 
+  ## Detect variable-length series (trailing NAs)
+  if (any(is.na(x))) {
+    serieslens <- apply(x, 1, function(row) {
+      na_pos <- which(is.na(row))
+      if (length(na_pos) == 0) return(length(row))
+      first_na <- min(na_pos)
+      if (any(!is.na(row[first_na:length(row)])))
+        stop("NAs in x must be trailing (variable-length format)")
+      return(first_na - 1L)
+    })
+    x[is.na(x)] <- 0
+  } else {
+    serieslens <- rep(ncol(x), nrow(x))
+  }
+
   classes <- as.factor(classes)
   if (length(classes) != nrow(x))
     stop("length of classes must equal the number of time series (rows of x)")
@@ -107,6 +122,7 @@ discriminativePatterns <- function(object, x, classes, n=5, plot=TRUE,
                 as.integer(object$target.type),
                 predictpatterns = double(ntest * mdim),
                 targetpatterns = double(ntest * mdim),
+                as.integer(serieslens),
                 PACKAGE = "LPStimeSeries")[c("predictpatterns", "targetpatterns")]
 
       ans$targetpatterns[ans$targetpatterns == -999] <- NA

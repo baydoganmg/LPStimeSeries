@@ -1,6 +1,6 @@
 computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdepth=NULL, which.tree=NULL,
 							sim.type=0, terminal=TRUE,testrepresentation,refrepresentation,
-							nthreads=1) {
+							nthreads=1, normalize=FALSE) {
 
   nthreads <- as.integer(nthreads)
   if (is.na(nthreads) || nthreads < 1) nthreads <- 1L
@@ -61,6 +61,35 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdep
 	ntree <- object$ntree
 	ntrain <- nrow(refseries)
 	ntest <- nrow(testseries)
+
+	## Detect variable-length series (trailing NAs)
+	if (any(is.na(refseries))) {
+	  serieslens_ref <- apply(refseries, 1, function(row) {
+	    na_pos <- which(is.na(row))
+	    if (length(na_pos) == 0) return(length(row))
+	    first_na <- min(na_pos)
+	    if (any(!is.na(row[first_na:length(row)])))
+	      stop("NAs in refseries must be trailing (variable-length format)")
+	    return(first_na - 1L)
+	  })
+	  refseries[is.na(refseries)] <- 0
+	} else {
+	  serieslens_ref <- rep(mdim, ntrain)
+	}
+	if (any(is.na(testseries))) {
+	  serieslens_test <- apply(testseries, 1, function(row) {
+	    na_pos <- which(is.na(row))
+	    if (length(na_pos) == 0) return(length(row))
+	    first_na <- min(na_pos)
+	    if (any(!is.na(row[first_na:length(row)])))
+	      stop("NAs in testseries must be trailing (variable-length format)")
+	    return(first_na - 1L)
+	  })
+	  testseries[is.na(testseries)] <- 0
+	} else {
+	  serieslens_test <- rep(mdim, ntest)
+	}
+
 	keepIndex <- c("similarity")
 	x <- t(data.matrix(refseries))
 	xtst <- t(data.matrix(testseries))
@@ -84,8 +113,11 @@ computeSimilarity <- function(object=NULL,testseries=NULL,refseries=NULL, maxdep
 			object$forest$ndbigtree,
 			as.integer(maxdepth),
 			as.integer(sim.type),
-			similarity = integer(ntest*ntrain),
+			similarity = double(ntest*ntrain),
 			as.integer(nthreads),
+			as.integer(serieslens_ref),
+			as.integer(serieslens_test),
+			as.integer(normalize),
 			PACKAGE = "LPStimeSeries")[keepIndex]
 	}
 	return(matrix(ans$similarity,ntest,ntrain))

@@ -1,4 +1,19 @@
-## Resubmission
+## Resubmission (2026-04-17)
+
+In response to Benjamin Altmann's review, this version:
+
+- Adds a methods reference to the DESCRIPTION field in the required
+  form: Baydogan and Runger (2016) <doi:10.1007/s10618-015-0425-y>.
+- Expands `Authors@R` to credit all contributors and copyright holders
+  of adapted code. The C sources in `src/regTree.c`, `src/regrf.c`,
+  `src/rfutils.c`, and `src/rf.h` are adapted from the 'randomForest'
+  package (R port by Andy Liaw and Matthew Wiener, based on original
+  Fortran code by Leo Breiman and Adele Cutler; copyright held by
+  Merck & Co., Inc.). All four individuals are now listed with `ctb`
+  role, and Merck & Co., Inc. with `cph` role. The original
+  copyright and GPL notices remain intact at the top of each C file.
+
+## Previous submission notes
 
 This package was archived on 2022-06-14 due to C compilation failures
 caused by deprecated R API macros (`Calloc`/`Free`). All issues have

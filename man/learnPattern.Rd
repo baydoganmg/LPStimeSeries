@@ -27,7 +27,8 @@
    oob.pred=FALSE,
    keep.errors=FALSE,
    keep.inbag=FALSE,
-   nthreads=1, ...)
+   nthreads=1,
+   wrap=TRUE, ...)
 \method{print}{learnPattern}(x, ...)
 }
 \arguments{
@@ -69,6 +70,11 @@
   \item{nthreads}{Number of threads to use for parallel tree building.
     Default is 1 (sequential). Requires OpenMP support. Note: parallelization
     is only used when \code{replace=FALSE} (the default).}
+  \item{wrap}{If \code{TRUE} (default), segments that exceed a short
+    series wrap around via modulo indexing, so all series participate in
+    every tree.  If \code{FALSE}, series shorter than the segment are
+    excluded from that tree.  Only relevant for variable-length input
+    (trailing \code{NA}s).}
   \item{...}{optional parameters to be passed to the low level function
     \code{learnPattern}.}
 }

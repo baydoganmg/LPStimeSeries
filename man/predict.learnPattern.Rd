@@ -6,7 +6,7 @@
 }
 \usage{
 \method{predict}{learnPattern}(object, newdata, which.tree=NULL,
-   nodes=TRUE, maxdepth=NULL, ...)
+   nodes=TRUE, maxdepth=NULL, normalize=FALSE, ...)
 }
 \arguments{
   \item{object}{an object of class \code{learnPattern}, as that
@@ -18,6 +18,9 @@
   \item{nodes}{\code{TRUE} generates the representation based on the trees.
 .  \code{FALSE} generates a real-valued prediction for each time point.  }
   \item{maxdepth}{The maximum depth level to generate the representation }
+  \item{normalize}{If \code{TRUE} and \code{nodes=TRUE}, normalize the
+    representation by dividing each series' node counts by its length.
+    Recommended for variable-length time series.  Default is \code{FALSE}.}
   \item{...}{not used currently.}
 }
 
